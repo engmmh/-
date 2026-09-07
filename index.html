@@ -4,9 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title id="page-title">منصة سلامة الغذاء | V2.3</title>
-<script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
   :root{
@@ -15,6 +13,8 @@
     --text:#1e293b; --muted:#64748b; --border:#e2e8f0;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
+  .app-main{max-width:64rem;margin-left:auto;margin-right:auto;padding:12px;}
+  @media(min-width:640px){.app-main{padding:20px;}}
   body{font-family:'Cairo','Poppins',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
   .card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 4px 20px -2px rgba(0,0,0,.05);}
   .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;}
@@ -134,7 +134,7 @@ body{background:linear-gradient(180deg,#f4f7f9 0%,#eef3f6 100%);font-family:'Cai
 </style>
 </head>
 <body>
-<main class="max-w-5xl mx-auto p-3 sm:p-5" style="padding-bottom:60px;">
+<main class="app-main" style="padding-bottom:60px;">
 
   <!-- ============ تسجيل الدخول ============ -->
   <section id="login-section">
