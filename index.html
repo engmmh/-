@@ -1978,7 +1978,8 @@ loadAdminQuizzes = async function(){
     const target=targetDepartmentsV22.find(d=>String(d.id)===String(q.target_department_id));
     const w=document.createElement('div'); w.className='card'; w.style.cssText='padding:16px;margin-bottom:12px;';
     w.innerHTML='<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">'+
-      '<div><div style="font-weight:800;font-size:14px;">📝 '+esc(q.title_ar||('اختبار '+q.id))+'</div><div class="muted" style="font-size:10px;margin-top:3px;">القسم: '+esc(sec?tr(sec,'name'):'الكل')+' | الإدارة: '+esc(target?.name_ar||'—')+'</div></div>'+
+      '<div><div style="font-weight:800;font-size:14px;">📝 '+esc(q.title_ar||('اختبار '+q.id))+'</div><div class="muted" style="font-size:10px;margin-top:3px;">📁 '+esc(sec?tr(sec,'name'):'كل الأقسام')+' &nbsp;|&nbsp; 🏢 '+esc(target?.name_ar||'كل الإدارات')+'</div>'+
+      '<div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap;">'+(q.is_visible?'<span class="badge badge-green" style="font-size:9px;">ظاهر للموظف</span>':'<span class="badge badge-yellow" style="font-size:9px;">مخفي</span>')+'<span class="badge badge-blue" style="font-size:9px;">'+(questions?.length||0)+' سؤال</span></div></div>'+
       '<div style="display:flex;gap:5px;flex-wrap:wrap;"><button class="btn-sm '+(q.is_visible?'btn-danger':'btn-primary')+'" style="padding:7px 10px;font-size:10px;" onclick="toggleQuizVisibilityV22('+q.id+')">'+(q.is_visible?'إخفاء':'إظهار')+'</button><button class="btn-secondary btn-sm" onclick="addQuestionForm('+q.id+')">+ سؤال</button><button class="btn-danger btn-sm" onclick="deleteQuiz('+q.id+')">حذف</button></div></div>'+
       '<div id="add-question-form-'+q.id+'" class="hidden" style="background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;"><div style="font-weight:700;font-size:13px;margin-bottom:8px;">إضافة سؤال</div><label class="field-label">السؤال (عربي)</label><input id="qs-ar-'+q.id+'" type="text" class="input-field" placeholder="السؤال بالعربية" onblur="autoTranslateGroup(&#39;qs-ar-'+q.id+'&#39;,{en:&#39;qs-en-'+q.id+'&#39;,bn:&#39;qs-bn-'+q.id+'&#39;,ne:&#39;qs-ne-'+q.id+'&#39;,hi:&#39;qs-hi-'+q.id+'&#39;})"/>'+
       '<button class="btn-secondary" style="margin:8px 0 0;" onclick="togglePanel(\'qs-langs-'+q.id+'\')">+ لغات</button><div class="collapsible-panel" id="qs-langs-'+q.id+'" style="margin-top:8px;"><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">'+['en','bn','ne','hi'].map(l=>'<input id="qs-'+l+'-'+q.id+'" type="text" class="input-field" placeholder="'+l+'"/>').join('')+'</div></div>'+
@@ -1986,7 +1987,7 @@ loadAdminQuizzes = async function(){
       '<div id="questions-list-'+q.id+'" style="display:flex;flex-direction:column;gap:8px;"></div>';
     box.appendChild(w);
     const ql=$('questions-list-'+q.id);
-    ql.innerHTML=(questions||[]).map(qst=>'<div style="border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:#f8fafc;"><div style="display:flex;justify-content:space-between;align-items:center;"><div style="font-weight:700;font-size:13px;">'+esc(qst.question_ar)+'</div><button class="btn-danger btn-sm" onclick="deleteQuestion('+qst.id+')">حذف</button></div></div>').join('')||'<div class="muted" style="font-size:12px;">لا توجد أسئلة بعد</div>';
+    ql.innerHTML=(questions||[]).map((qst,i)=>'<div style="border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:#f8fafc;"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><div style="font-weight:700;font-size:13px;"><span class="muted" style="font-weight:900;">'+(i+1)+'.</span> '+esc(qst.question_ar)+'</div><button class="btn-danger btn-sm" onclick="deleteQuestion('+qst.id+')">حذف</button></div></div>').join('')||'<div class="muted" style="font-size:12px;">لا توجد أسئلة بعد</div>';
   }
 };
 async function loadWorkerPerformanceSummaryV23(workerId){
@@ -2013,12 +2014,97 @@ loadAdminCards = async function(){
   const {data,error}=await sb.from('safety_cards').select('*').order('id',{ascending:true});
   if(error){showToast('تعذر تحميل الكروت');return;}
   const ids=getAdminScopeIds();let list=(data||[]);if(!adminUser?.isSuper)list=list.filter(c=>!c.section_id||ids.includes(Number(c.section_id)));
+  list=list.slice().sort((a,b)=>(Number(a.sort_order)||0)-(Number(b.sort_order)||0) || (a.id-b.id));
   const box=$('admin-cards-list');
-  box.innerHTML=list.map(c=>{const sec=sections.find(s=>String(s.id)===String(c.section_id));const img=c.image?'<img src="'+esc(c.image)+'" style="width:80px;height:60px;object-fit:cover;border-radius:8px;" onerror="this.style.display=\'none\'"/>':'<div style="width:80px;height:60px;border-radius:8px;background:#e2e8f0;display:flex;align-items:center;justify-content:center;">📸</div>';const secName=sec?tr(sec,'name'):'الكل';return '<div class="card" style="padding:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">'+img+'<div style="flex:1;min-width:160px;"><div style="font-weight:700;font-size:13px;">'+esc(c.title_ar)+'</div><div class="muted" style="font-size:11px;">'+esc(c.description_ar||'')+'</div><div class="muted" style="font-size:10px;margin-top:4px;">القسم: '+esc(secName)+'</div></div><div style="display:flex;flex-direction:column;gap:6px;"><button class="btn-sm '+(c.is_visible?'btn-danger':'btn-primary')+'" style="padding:7px 14px;font-size:11px;" onclick="toggleCardVisibility('+c.id+')">'+(c.is_visible?'إخفاء':'إظهار')+'</button><button class="btn-danger btn-sm" onclick="deleteCard('+c.id+')">حذف</button></div></div>';}).join('')||'<div class="muted" style="font-size:12px;text-align:center;padding:10px;">لا توجد بطاقات</div>';
+  box.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;">'+list.map(c=>{
+    const sec=sections.find(s=>String(s.id)===String(c.section_id));
+    const img=c.image?'<img src="'+esc(c.image)+'" loading="lazy" style="width:100%;height:130px;object-fit:cover;" onerror="this.style.display=\'none\'"/>':'<div style="width:100%;height:130px;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-size:30px;">📸</div>';
+    const secName=sec?tr(sec,'name'):'كل الأقسام';
+    return '<div class="topic-card" style="overflow:hidden;">'+img+
+      '<div style="padding:11px 12px;">'+
+        '<div style="font-weight:700;font-size:13px;">'+esc(c.title_ar)+'</div>'+
+        '<div class="muted" style="font-size:11px;margin-top:3px;min-height:15px;">'+esc(c.description_ar||'')+'</div>'+
+        '<div class="muted" style="font-size:10px;margin-top:6px;">📁 '+esc(secName)+' &nbsp;|&nbsp; ↕️ '+(c.sort_order||0)+'</div>'+
+        '<div style="margin-top:8px;">'+(c.is_visible?'<span class="badge badge-green" style="font-size:9px;">ظاهر للموظف</span>':'<span class="badge badge-yellow" style="font-size:9px;">مخفي</span>')+'</div>'+
+        '<div class="card-actions-row" style="display:flex;gap:6px;margin-top:9px;flex-wrap:wrap;">'+
+          '<button class="btn-sm '+(c.is_visible?'btn-danger':'btn-primary')+'" style="padding:6px 10px;font-size:10px;flex:1;" onclick="toggleCardVisibility('+c.id+')">'+(c.is_visible?'إخفاء':'إظهار')+'</button>'+
+          '<button class="btn-danger btn-sm" style="padding:6px 10px;font-size:10px;" onclick="deleteCard('+c.id+')">حذف</button>'+
+        '</div>'+
+      '</div></div>';
+  }).join('')+'</div>' || '<div class="muted" style="font-size:12px;text-align:center;padding:10px;">لا توجد بطاقات</div>';
+  if(!list.length) box.innerHTML='<div class="muted" style="font-size:12px;text-align:center;padding:10px;">لا توجد بطاقات</div>';
 };
 loadAdminVideos = async function(){
   const [{data:topics,error:e1},{data:videos,error:e2}]=await Promise.all([sb.from('training_topics').select('*').order('id'),sb.from('training_videos').select('*').order('id')]);
-  if(e1||e2){showToast('تعذر تحميل التدريبات');return;}const ids=getAdminScopeIds();let topicList=(topics||[]);if(!adminUser?.isSuper)topicList=topicList.filter(t=>!t.section_id||ids.includes(Number(t.section_id)));const vm={};(videos||[]).forEach(v=>{if(v.topic_id)(vm[v.topic_id] ||= []).push(v);});const box=$('admin-videos-list');box.innerHTML=topicList.map(t=>{const rows=vm[t.id]||[],sec=sections.find(s=>String(s.id)===String(t.section_id)),secName=sec?tr(sec,'name'):'الكل';const langHtml=VIDEO_LANGS.map(l=>{const r=rows.find(v=>(v.video_lang||'ar')===l&&v.video_url);return '<span class="badge '+(r?'badge-green':'badge-yellow')+'" style="font-size:9px;">'+videoLanguageLabel(l)+' '+(r?'✓':'—')+'</span>';}).join(' ');const rowHtml=rows.map(v=>{const ytId=extractYTVideoId(v.video_url);const thumb=ytId?'<img src="https://img.youtube.com/vi/'+ytId+'/hqdefault.jpg" loading="lazy" style="width:82px;height:46px;object-fit:cover;border-radius:7px;"/>':'<div style="width:82px;height:46px;border-radius:7px;background:#e2e8f0;display:flex;align-items:center;justify-content:center;">🎬</div>';return '<div style="display:flex;align-items:center;gap:8px;border-top:1px solid var(--border);padding:8px 0;">'+thumb+'<div style="flex:1;font-size:11px;"><b>'+videoLanguageLabel(v.video_lang||'ar')+'</b><div class="muted">ID الفيديو: '+v.id+'</div></div><button class="btn-danger btn-sm" onclick="deleteVideoVersion('+v.id+')">حذف النسخة</button></div>';}).join('');return '<div class="topic-card"><div style="padding:13px 14px;"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center;"><div><div style="font-weight:800;font-size:14px;">🎓 '+esc(t.title_ar)+'</div><div class="muted" style="font-size:10px;margin-top:3px;">القسم: '+esc(secName)+' | '+langHtml+'</div></div><div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;"><button class="btn-sm '+(t.is_visible?'btn-danger':'btn-primary')+'" style="padding:7px 10px;font-size:10px;" onclick="toggleTopicVisibility('+t.id+')">'+(t.is_visible?'إخفاء':'إظهار')+'</button><button class="btn-danger btn-sm" onclick="deleteTrainingTopic('+t.id+')">حذف التدريب</button></div></div>'+rowHtml+'</div></div>';}).join('')||'<div class="muted" style="font-size:12px;text-align:center;padding:10px;">لا توجد تدريبات فيديو</div>';
+  if(e1||e2){showToast('تعذر تحميل التدريبات');return;}
+  const ids=getAdminScopeIds();let topicList=(topics||[]);if(!adminUser?.isSuper)topicList=topicList.filter(t=>!t.section_id||ids.includes(Number(t.section_id)));
+  topicList=topicList.slice().sort((a,b)=>(Number(a.sort_order)||0)-(Number(b.sort_order)||0) || (a.id-b.id));
+  const vm={};(videos||[]).forEach(v=>{if(v.topic_id)(vm[v.topic_id] ||= []).push(v);});
+  const box=$('admin-videos-list');
+  box.innerHTML=topicList.map(t=>{
+    const rows=vm[t.id]||[],sec=sections.find(s=>String(s.id)===String(t.section_id)),secName=sec?tr(sec,'name'):'كل الأقسام';
+    const cover=rows.map(v=>extractYTVideoId(v.video_url)).find(Boolean);
+    const coverHtml=cover?'<img src="https://img.youtube.com/vi/'+cover+'/hqdefault.jpg" loading="lazy" style="width:100%;height:150px;object-fit:cover;"/>':'<div style="width:100%;height:150px;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-size:34px;">🎬</div>';
+    const langHtml=VIDEO_LANGS.map(l=>{const r=rows.find(v=>(v.video_lang||'ar')===l&&v.video_url);return '<span class="badge '+(r?'badge-green':'badge-yellow')+'" style="font-size:9px;">'+videoLanguageLabel(l)+' '+(r?'✓':'—')+'</span>';}).join(' ');
+    const versionsHtml=rows.map(v=>{const ytId=extractYTVideoId(v.video_url);const thumb=ytId?'<img src="https://img.youtube.com/vi/'+ytId+'/default.jpg" loading="lazy" style="width:56px;height:32px;object-fit:cover;border-radius:5px;"/>':'<div style="width:56px;height:32px;border-radius:5px;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-size:12px;">🎬</div>';return '<div style="display:flex;align-items:center;gap:8px;border-top:1px solid var(--border);padding:7px 0;">'+thumb+'<div style="flex:1;font-size:11px;"><b>'+videoLanguageLabel(v.video_lang||'ar')+'</b><div class="muted">ID الفيديو: '+v.id+'</div></div><button class="btn-danger btn-sm" onclick="deleteVideoVersion('+v.id+')">حذف النسخة</button></div>';}).join('');
+    return '<div class="topic-card" style="overflow:hidden;">'+
+      coverHtml+
+      '<div style="padding:13px 14px;">'+
+        '<div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;flex-wrap:wrap;">'+
+          '<div style="min-width:0;"><div style="font-weight:800;font-size:14.5px;">🎓 '+esc(t.title_ar)+'</div>'+
+            '<div class="muted" style="font-size:10px;margin-top:4px;">📁 '+esc(secName)+' &nbsp;|&nbsp; ↕️ ترتيب: '+(t.sort_order||0)+'</div>'+
+            '<div style="margin-top:6px;display:flex;gap:4px;flex-wrap:wrap;">'+langHtml+'</div>'+
+          '</div>'+
+          '<div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;">'+
+            '<button class="btn-secondary btn-sm" style="font-size:10px;" onclick="openVideoWatchersPanel('+t.id+',\''+esc(t.title_ar).replace(/'/g,"\\'")+'\')">👁️ من شاهد؟</button>'+
+            '<button class="btn-sm '+(t.is_visible?'btn-danger':'btn-primary')+'" style="padding:7px 10px;font-size:10px;" onclick="toggleTopicVisibility('+t.id+')">'+(t.is_visible?'إخفاء':'إظهار')+'</button>'+
+            '<button class="btn-danger btn-sm" onclick="deleteTrainingTopic('+t.id+')">حذف التدريب</button>'+
+          '</div>'+
+        '</div>'+
+        versionsHtml+
+      '</div></div>';
+  }).join('')||'<div class="muted" style="font-size:12px;text-align:center;padding:10px;">لا توجد تدريبات فيديو</div>';
+};
+/* ---------- من شاهد هذا التدريب؟ ---------- */
+window.openVideoWatchersPanel = async function(topicId, topicTitle){
+  let ids=[]; try{ ids=(typeof getAdminScopeIds==='function')?getAdminScopeIds():(adminUser?.section_ids||(adminUser?.section_id?[adminUser.section_id]:[])); }catch(e){}
+  let wq=sb.from('workers_evaluations').select('id,worker_name,section_id').order('id');
+  if(!(adminUser?.isSuper) && ids.length) wq=wq.in('section_id',ids);
+  const [{data:workers},{data:progress}]=await Promise.all([
+    wq,
+    sb.from('training_progress').select('worker_id,progress_percent,completed,language,updated_at').eq('topic_id',topicId)
+  ]);
+  const map={}; (progress||[]).forEach(p=>{ if(!map[p.worker_id] || new Date(p.updated_at||0)>new Date(map[p.worker_id].updated_at||0)) map[p.worker_id]=p; });
+  const list=workers||[];
+  const completedList=list.filter(w=>map[w.id]?.completed);
+  const inProgressList=list.filter(w=>map[w.id] && !map[w.id].completed);
+  const notStartedList=list.filter(w=>!map[w.id]);
+  const rowHtml=(w)=>{
+    const p=map[w.id];
+    const status = p?.completed ? '<span class="badge badge-green" style="font-size:10px;">مكتمل ✅ ('+videoLanguageLabel(p.language||'ar')+')</span>'
+      : p ? '<span class="badge badge-yellow" style="font-size:10px;">'+Math.round(p.progress_percent||0)+'%</span>'
+      : '<span class="badge badge-red" style="font-size:10px;">لم يبدأ</span>';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:7px 10px;margin-bottom:6px;">'+
+      '<span style="font-size:12px;font-weight:700;">#'+w.id+' — '+esc(w.worker_name)+'</span>'+status+'</div>';
+  };
+  const html='<div class="preview-modal" id="video-watchers-modal"><div class="preview-panel" style="max-width:520px;">'+
+    '<div class="preview-top"><b>👁️ '+esc(topicTitle)+' — من شاهد</b><button class="btn-secondary btn-sm" onclick="document.getElementById(\'video-watchers-modal\').remove()">إغلاق ✕</button></div>'+
+    '<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;"><button class="tab-btn active" style="min-height:auto;padding:6px 12px;" onclick="vwTab(this,\'vw-all\')">👥 الجميع ('+list.length+')</button>'+
+    '<button class="tab-btn" style="min-height:auto;padding:6px 12px;" onclick="vwTab(this,\'vw-done\')">✅ شاهدوا ('+completedList.length+')</button>'+
+    '<button class="tab-btn" style="min-height:auto;padding:6px 12px;" onclick="vwTab(this,\'vw-progress\')">🟡 جاري ('+inProgressList.length+')</button>'+
+    '<button class="tab-btn" style="min-height:auto;padding:6px 12px;" onclick="vwTab(this,\'vw-not\')">❌ لم يشاهدوا ('+notStartedList.length+')</button></div>'+
+    '<div id="vw-all">'+(list.map(rowHtml).join('')||'<div class="muted">لا يوجد موظفين</div>')+'</div>'+
+    '<div id="vw-done" class="hidden">'+(completedList.map(rowHtml).join('')||'<div class="muted">لا أحد شاهد بعد</div>')+'</div>'+
+    '<div id="vw-progress" class="hidden">'+(inProgressList.map(rowHtml).join('')||'<div class="muted">لا يوجد</div>')+'</div>'+
+    '<div id="vw-not" class="hidden">'+(notStartedList.map(rowHtml).join('')||'<div class="muted">الجميع شاهدوا</div>')+'</div>'+
+    '</div></div>';
+  document.body.insertAdjacentHTML('beforeend', html);
+};
+window.vwTab=function(btn,id){
+  ['vw-all','vw-done','vw-progress','vw-not'].forEach(i=>$(i)?.classList.add('hidden'));
+  $(id)?.classList.remove('hidden');
+  btn.parentElement.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
 };
 saveVideoTopic = async function(){
   const titleAr=$('vd-title-ar').value.trim(),titleEn=($('vd-title-en')?.value||'').trim();
@@ -2248,7 +2334,7 @@ loadWorkerVideos=async function(){if(!currentUser)return;const [trr,vrr,prr]=awa
 saveCardV23=saveCard;saveCard=async function(){return saveCardV23.apply(this,arguments)};
 
 /* Add edit buttons to admin lists by wrapping current renderers */
-const baseAdminCardsV23=loadAdminCards;loadAdminCards=async function(){await baseAdminCardsV23();document.querySelectorAll('#admin-cards-list .card').forEach(el=>{const btn=el.querySelector('button[onclick^="deleteCard"]');const id=btn?.getAttribute('onclick')?.match(/deleteCard\((\d+)\)/)?.[1];if(id&&!el.querySelector('.v23-edit-card')){const b=document.createElement('button');b.className='btn-secondary btn-sm v23-edit-card';b.textContent='تعديل';b.onclick=()=>openEditCardV23(Number(id));el.querySelector('div[style*="flex-direction:column"]')?.prepend(b);}});};
+const baseAdminCardsV23=loadAdminCards;loadAdminCards=async function(){await baseAdminCardsV23();document.querySelectorAll('#admin-cards-list .topic-card').forEach(el=>{const btn=el.querySelector('button[onclick^="deleteCard"]');const id=btn?.getAttribute('onclick')?.match(/deleteCard\((\d+)\)/)?.[1];if(id&&!el.querySelector('.v23-edit-card')){const b=document.createElement('button');b.className='btn-secondary btn-sm v23-edit-card';b.style.flex='1';b.textContent='تعديل';b.onclick=()=>openEditCardV23(Number(id));(el.querySelector('.card-actions-row')||el.querySelector('div[style*="flex-direction:column"]'))?.prepend(b);}});};
 const baseAdminVideosV23=loadAdminVideos;loadAdminVideos=async function(){await baseAdminVideosV23();document.querySelectorAll('#admin-videos-list .topic-card').forEach(el=>{const btn=el.querySelector('button[onclick^="deleteTrainingTopic"]');const id=btn?.getAttribute('onclick')?.match(/deleteTrainingTopic\((\d+)\)/)?.[1];if(id&&!el.querySelector('.v23-edit-topic')){const b=document.createElement('button');b.className='btn-secondary btn-sm v23-edit-topic';b.textContent='تعديل';b.onclick=()=>openEditTopicV23(Number(id));btn.parentElement?.prepend(b);}});};
 
 /* Edit buttons for existing questions */
