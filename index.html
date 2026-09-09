@@ -1762,6 +1762,12 @@ async function submitQuiz(quizId,questions){
     // عمود is_current لسه مش مضاف في قاعدة البيانات — نحفظ من غيره مؤقتًا (النظام هيعتمد وقتها على ترتيب التاريخ فقط)
     ({error:insErr}=await sb.from('quiz_attempts').insert({worker_id:currentUser.id, quiz_id:quizId, score}));
   }
+  if(insErr){
+    // فشل حفظ النتيجة فعليًا — لازم الموظف يعرف ده صراحة بدل ما يشوف رسالة نجاح وهمية
+    console.error('فشل حفظ نتيجة الاختبار:', insErr);
+    showToast('⚠️ حصل خطأ ولم يتم حفظ نتيجتك، حاول تاني أو كلّم الأدمن: '+(insErr.message||''));
+    return;
+  }
   // نقفل إذن "السماح بإعادة الاختبار" فور استخدامه، عشان الاختبار يختفي فورًا من عند الموظف زي أول مرة بالظبط
   // (ده مش بيمسح نتائجه القديمة أبدًا، بس بيقفل الإذن اللي كان مفتوح له)
   try{ await sb.from('quiz_unlocks').delete().eq('worker_id',currentUser.id).eq('quiz_id',quizId); }catch(e){ console.error('تعذر إغلاق إذن إعادة الاختبار بعد الحل:',e); }
@@ -3120,7 +3126,7 @@ try{(function(){
       sb.from('quiz_attempts').select('worker_id,score,created_at,is_current').eq('quiz_id',quizId).order('created_at',{ascending:false})
     ]);
     const doneMap={};
-    (attempts||[]).forEach(a=>{ if(a.is_current) doneMap[a.worker_id]=a; }); // الأولوية للمحاولة المعلّمة "حالية" (دقيقة ١٠٠٪)
+    (attempts||[]).forEach(a=>{ if(a.is_current && !doneMap[a.worker_id]) doneMap[a.worker_id]=a; }); // الأولوية للمحاولة المعلّمة "حالية" الأحدث (أول واحدة نلاقيها في الترتيب التنازلي بالتاريخ)
     (attempts||[]).forEach(a=>{ if(!doneMap[a.worker_id]) doneMap[a.worker_id]=a; }); // fallback لبيانات قديمة قبل إضافة is_current
     const list=workers||[];
     const done=list.filter(w=>doneMap[w.id]);
