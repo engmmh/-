@@ -298,7 +298,8 @@ body{background:linear-gradient(180deg,#f4f7f9 0%,#eef3f6 100%);font-family:'Cai
     </div>
 
     <div class="admin-shell-nav">
-      <button class="tab-btn active" onclick="adminTab('workers')" id="tabbtn-workers"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="nav-label">الموظفين<span class="nav-en">Workers</span></span></button>
+      <button class="tab-btn active" onclick="adminTab('dashboard')" id="tabbtn-dashboard"><span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="10" width="8" height="11" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/></svg></span><span class="nav-label">لوحة التحكم<span class="nav-en">Dashboard</span></span></button>
+      <button class="tab-btn" onclick="adminTab('workers')" id="tabbtn-workers"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="nav-label">الموظفين<span class="nav-en">Workers</span></span></button>
       <button class="tab-btn" onclick="adminTab('sections')" id="tabbtn-sections"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 7h18M3 12h18M3 17h18"/><path d="M6 4v16"/></svg></span><span class="nav-label">الأقسام<span class="nav-en">Sections</span></span></button>
       <button class="tab-btn" onclick="adminTab('roles')" id="tabbtn-roles"><span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span><span class="nav-label">الوظائف / الأدوار<span class="nav-en">Job Roles</span></span></button>
       <button class="tab-btn" onclick="adminTab('targets')" id="tabbtn-targets"><span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M22 12h-3"/></svg></span><span class="nav-label">الإدارات المستهدفة<span class="nav-en">Departments</span></span></button>
@@ -313,8 +314,39 @@ body{background:linear-gradient(180deg,#f4f7f9 0%,#eef3f6 100%);font-family:'Cai
       <button class="tab-btn" onclick="openAdminPreview()" id="tabbtn-preview"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z"/><circle cx="12" cy="12" r="2.5"/></svg></span><span class="nav-label">معاينة الموظف<span class="nav-en">Worker Preview</span></span></button>
     </div>
 
+    <!-- ===== لوحة التحكم ===== -->
+    <div class="admin-tab active" id="tab-dashboard">
+      <div class="card" style="padding:16px;margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+          <div class="section-title">📊 نظرة عامة على النظام</div>
+          <button class="btn-secondary btn-sm" onclick="toggleComplianceSettings()">⚙️ ضبط معادلة الالتزام</button>
+        </div>
+        <div id="compliance-settings-box" class="hidden" style="background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px;">
+          <div style="font-weight:700;font-size:13px;margin-bottom:8px;">أوزان معادلة "نسبة الالتزام" (لازم مجموعهم ١٠٠)</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+            <div><label class="field-label">🎬 إكمال التدريبات</label><input id="cw-training" type="number" class="input-field" value="50"/></div>
+            <div><label class="field-label">📝 متوسط الاختبارات</label><input id="cw-quiz" type="number" class="input-field" value="30"/></div>
+            <div><label class="field-label">⚠️ الخلو من المخالفات</label><input id="cw-violations" type="number" class="input-field" value="20"/></div>
+          </div>
+          <button class="btn-primary btn-sm" style="margin-top:10px;" onclick="saveComplianceWeights()">حفظ وإعادة الحساب</button>
+          <div id="cw-msg" style="font-size:12px;margin-top:6px;"></div>
+        </div>
+        <div id="dashboard-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:18px;"></div>
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,320px);gap:16px;align-items:start;">
+          <div>
+            <div style="font-weight:800;font-size:13px;margin-bottom:10px;">🏢 نسبة الالتزام لكل قسم</div>
+            <div id="dashboard-sections-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-weight:800;font-size:13px;margin-bottom:10px;">الالتزام العام</div>
+            <div id="dashboard-donut" style="width:160px;height:160px;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ===== الموظفين ===== -->
-    <div class="admin-tab active" id="tab-workers">
+    <div class="admin-tab" id="tab-workers">
       <div class="card" style="padding:16px;margin-bottom:14px;">
         <div class="section-title" style="margin-bottom:12px;">➕ إضافة موظف جديد</div>
         <div style="display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:12px;">
@@ -1881,7 +1913,7 @@ function adminTab(tab){
   if(tab==='vio-lib') loadViolationLib();
   if(tab==='admins') renderAdminAdmins();
 }
-function loadAdminData(){ adminTab('workers'); }
+function loadAdminData(){ adminTab('dashboard'); }
 
 // ==================== WORKER DATA ====================
 async function loadWorkerData(){
@@ -1972,7 +2004,7 @@ loadAdminComments = async function(){const {data}=await sb.from('content_comment
 // Hide moderated comments from workers.
 const oldAddComment=addComment;addComment=async function(type,itemId){if(!currentUser)return;const input=$((type==='card'?'ccmt':'vcmt')+'-'+itemId),text=input?.value.trim();if(!text)return showToast('اكتب تعليقك');const {error}=await sb.from('content_comments').insert({item_type:type,item_id:itemId,worker_id:currentUser.id,comment:text,is_visible:true});if(error)return showToast(error.message);input.value='';showToast('تم إرسال تعليقك للأدمن ✅');};
 // Admin tab additions
-const oldAdminTab=adminTab;adminTab=function(tab){document.querySelectorAll('.admin-tab').forEach(e=>e.classList.remove('active'));const t=$('tab-'+tab);if(t)t.classList.add('active');document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));const btn=$('tabbtn-'+tab);if(btn)btn.classList.add('active');if(tab==='workers')loadWorkers();if(tab==='sections')renderAdminSections();if(tab==='roles'){loadV22Meta();}if(tab==='targets'){loadV22Meta();}if(tab==='quizzes')loadAdminQuizzes();if(tab==='cards')loadAdminCards();if(tab==='videos')loadAdminVideos();if(tab==='comments')loadAdminComments();if(tab==='vio-lib')loadViolationLib();if(tab==='admins'){renderAdminAdmins();if(typeof loadDefaultPasswordField==='function')loadDefaultPasswordField();}};
+const oldAdminTab=adminTab;adminTab=function(tab){document.querySelectorAll('.admin-tab').forEach(e=>e.classList.remove('active'));const t=$('tab-'+tab);if(t)t.classList.add('active');document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));const btn=$('tabbtn-'+tab);if(btn)btn.classList.add('active');if(tab==='workers')loadWorkers();if(tab==='sections')renderAdminSections();if(tab==='roles'){loadV22Meta();}if(tab==='targets'){loadV22Meta();}if(tab==='quizzes')loadAdminQuizzes();if(tab==='cards')loadAdminCards();if(tab==='videos')loadAdminVideos();if(tab==='comments')loadAdminComments();if(tab==='vio-lib')loadViolationLib();if(tab==='admins'){renderAdminAdmins();if(typeof loadDefaultPasswordField==='function')loadDefaultPasswordField();}if(tab==='dashboard'&&typeof loadAdminDashboard==='function')loadAdminDashboard();};
 // Startup wrapper: load V2.2 metadata after sections are available.
 const oldLoadSections=loadSections;loadSections=async function(){await oldLoadSections();if(adminUser){await loadV22Meta();applyAdminScope();}};
 // Ensure worker questions and cards are loaded from V2.2 after login.
@@ -3351,6 +3383,164 @@ try{(function(){
 
   console.log('V2.6 layer loaded — counters, image retry, branding cache active.');
 })();}catch(e){console.error('طبقة 6 فشلت، الطبقات اللي بعدها هتشتغل عادي:',e);}
+
+/* ==================== طبقة 7: لوحة التحكم ونسبة الالتزام والشهادات ==================== */
+try{(function(){
+  window.toggleComplianceSettings = function(){ $('compliance-settings-box')?.classList.toggle('hidden'); };
+
+  async function getComplianceWeights(){
+    try{
+      const {data}=await sb.from('app_settings').select('key,value').in('key',['compliance_weight_training','compliance_weight_quiz','compliance_weight_violations']);
+      const m={}; (data||[]).forEach(r=>m[r.key]=Number(r.value));
+      return { training: m.compliance_weight_training ?? 50, quiz: m.compliance_weight_quiz ?? 30, violations: m.compliance_weight_violations ?? 20 };
+    }catch(e){ return { training:50, quiz:30, violations:20 }; }
+  }
+
+  window.saveComplianceWeights = async function(){
+    const t=Number($('cw-training').value)||0, q=Number($('cw-quiz').value)||0, v=Number($('cw-violations').value)||0;
+    const msg=$('cw-msg');
+    if(Math.round(t+q+v)!==100){ msg.innerHTML='<span style="color:#991b1b;">مجموع الأوزان لازم يساوي ١٠٠ (دلوقتي: '+(t+q+v)+')</span>'; return; }
+    try{
+      await sb.from('app_settings').upsert([
+        {key:'compliance_weight_training', value:String(t)},
+        {key:'compliance_weight_quiz', value:String(q)},
+        {key:'compliance_weight_violations', value:String(v)}
+      ]);
+      msg.innerHTML='<span style="color:#166534;">تم الحفظ ✅</span>';
+      setTimeout(()=>msg.innerHTML='',2500);
+      loadAdminDashboard();
+    }catch(e){ msg.innerHTML='<span style="color:#991b1b;">تعذر الحفظ: '+esc(e.message||'')+'</span>'; }
+  };
+
+  async function computeComplianceData(){
+    const weights=await getComplianceWeights();
+    const totalW=(weights.training+weights.quiz+weights.violations)||1;
+    const ids=getAdminScopeIds();
+    let wq=sb.from('workers_evaluations').select('id,worker_name,section_id,job_role_id,kpi_score');
+    if(!adminUser?.isSuper && ids.length) wq=wq.in('section_id',ids);
+    const [{data:workers},{data:topics},{data:progress},{data:attempts}]=await Promise.all([
+      wq,
+      sb.from('training_topics').select('id,section_id,target_department_id,is_visible'),
+      sb.from('training_progress').select('worker_id,topic_id,completed'),
+      sb.from('quiz_attempts').select('worker_id,score,is_current')
+    ]);
+    const list=workers||[];
+    const roleIds=[...new Set(list.map(w=>w.job_role_id).filter(Boolean))];
+    let roleDeptMap={};
+    if(roleIds.length){ try{ const {data:roles}=await sb.from('job_roles').select('id,target_department_id').in('id',roleIds); (roles||[]).forEach(r=>roleDeptMap[r.id]=r.target_department_id); }catch(e){} }
+
+    const progressByWorker={};
+    (progress||[]).forEach(p=>{ if(!p.completed) return; (progressByWorker[p.worker_id] ||= new Set()).add(p.topic_id); });
+    const scoresByWorker={};
+    (attempts||[]).forEach(a=>{ if(a.is_current===false) return; (scoresByWorker[a.worker_id] ||= []).push(Number(a.score)||0); });
+    const visibleTopics=(topics||[]).filter(t=>t.is_visible);
+
+    const perWorker=list.map(w=>{
+      const dept=roleDeptMap[w.job_role_id];
+      const relevant=visibleTopics.filter(t=>(!t.section_id||Number(t.section_id)===Number(w.section_id)) && (!t.target_department_id||Number(t.target_department_id)===Number(dept)));
+      const done=relevant.filter(t=>progressByWorker[w.id]?.has(t.id)).length;
+      const trainingPct=relevant.length ? (done/relevant.length*100) : 100;
+      const scores=scoresByWorker[w.id]||[];
+      const quizPct=scores.length ? (scores.reduce((a,b)=>a+b,0)/scores.length) : 100;
+      const violPct=Number(w.kpi_score ?? 100);
+      const compliance=((trainingPct*weights.training)+(quizPct*weights.quiz)+(violPct*weights.violations))/totalW;
+      return {worker:w, trainingPct, quizPct, violPct, compliance};
+    });
+
+    const bySection={};
+    perWorker.forEach(r=>{ const sid=r.worker.section_id||'none'; (bySection[sid] ||= []).push(r); });
+
+    return {weights, perWorker, bySection, totalWorkers:list.length};
+  }
+
+  function avg(arr, key){ if(!arr.length) return 0; return arr.reduce((s,r)=>s+r[key],0)/arr.length; }
+  function complianceColor(pct){ return pct>=80?'#16a34a':pct>=50?'#d97706':'#dc2626'; }
+
+  window.loadAdminDashboard = async function(){
+    const kpiBox=$('dashboard-kpis'), secBox=$('dashboard-sections-list'), donut=$('dashboard-donut');
+    if(!kpiBox) return;
+    kpiBox.innerHTML='<div class="muted" style="grid-column:1/-1;text-align:center;padding:14px;">جاري التحميل...</div>';
+    const {perWorker, bySection, totalWorkers} = await computeComplianceData();
+    const overall = avg(perWorker,'compliance');
+    const avgQuiz = avg(perWorker,'quizPct');
+    const avgTraining = avg(perWorker,'trainingPct');
+    let openViolations=0;
+    try{
+      const ids=getAdminScopeIds();
+      let vq=sb.from('worker_violations').select('id,worker_id,status').neq('status','closed');
+      const {data:viols}=await vq;
+      const scopedWorkerIds=new Set(perWorker.map(r=>r.worker.id));
+      openViolations=(viols||[]).filter(v=>scopedWorkerIds.has(v.worker_id)).length;
+    }catch(e){}
+
+    kpiBox.innerHTML =
+      '<div class="preview-card" style="margin:0;padding:12px;text-align:center;"><div class="muted" style="font-size:10px;font-weight:700;">إجمالي الموظفين</div><div style="font-size:24px;font-weight:900;color:var(--text);">'+totalWorkers+'</div></div>'+
+      '<div class="preview-card" style="margin:0;padding:12px;text-align:center;background:#ecfdf5;"><div class="muted" style="font-size:10px;font-weight:700;">نسبة الالتزام العامة</div><div style="font-size:24px;font-weight:900;color:'+complianceColor(overall)+';">'+Math.round(overall)+'%</div></div>'+
+      '<div class="preview-card" style="margin:0;padding:12px;text-align:center;"><div class="muted" style="font-size:10px;font-weight:700;">متوسط نتائج الاختبارات</div><div style="font-size:24px;font-weight:900;color:var(--primary);">'+Math.round(avgQuiz)+'%</div></div>'+
+      '<div class="preview-card" style="margin:0;padding:12px;text-align:center;"><div class="muted" style="font-size:10px;font-weight:700;">إكمال التدريبات</div><div style="font-size:24px;font-weight:900;color:var(--primary);">'+Math.round(avgTraining)+'%</div></div>'+
+      '<div class="preview-card" style="margin:0;padding:12px;text-align:center;background:#fef2f2;"><div class="muted" style="font-size:10px;font-weight:700;">مخالفات مفتوحة</div><div style="font-size:24px;font-weight:900;color:#dc2626;">'+openViolations+'</div></div>';
+
+    if(donut){
+      const col=complianceColor(overall);
+      donut.style.background='conic-gradient('+col+' '+(overall*3.6)+'deg, #e2e8f0 0deg)';
+      donut.innerHTML='<div style="width:118px;height:118px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;color:'+col+';">'+Math.round(overall)+'%</div>';
+    }
+
+    const rows=Object.keys(bySection).map(sid=>{
+      const arr=bySection[sid];
+      const sec=sections.find(s=>String(s.id)===String(sid));
+      const name=sec?tr(sec,'name'):'بدون قسم';
+      const pct=avg(arr,'compliance');
+      return {sid, name, pct, count:arr.length};
+    }).sort((a,b)=>b.pct-a.pct);
+
+    secBox.innerHTML = rows.map(r=>
+      '<div style="background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:11px 13px;">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;flex-wrap:wrap;gap:6px;">'+
+          '<span style="font-weight:700;font-size:13px;">🏢 '+esc(r.name)+' <span class="muted" style="font-weight:400;font-size:11px;">('+r.count+' موظف)</span></span>'+
+          '<span style="display:flex;align-items:center;gap:8px;"><b style="color:'+complianceColor(r.pct)+';font-size:14px;">'+Math.round(r.pct)+'%</b>'+
+          (r.sid!=='none'?'<button class="btn-secondary btn-sm" style="font-size:10px;" onclick="openCertificateModal(\''+r.sid+'\',\''+esc(r.name).replace(/'/g,"\\'")+'\','+r.pct.toFixed(1)+')">🏆 شهادة</button>':'')+'</span>'+
+        '</div>'+
+        '<div style="background:#e2e8f0;border-radius:20px;height:8px;overflow:hidden;"><div style="background:'+complianceColor(r.pct)+';height:100%;width:'+Math.min(100,r.pct)+'%;"></div></div>'+
+      '</div>'
+    ).join('') || '<div class="muted" style="text-align:center;padding:10px;">لا توجد بيانات كافية بعد</div>';
+  };
+
+  /* ---------- شهادة قسم (عرض + طباعة/PDF) ---------- */
+  window.openCertificateModal = function(sectionId, sectionName, pct){
+    const dateStr = new Date().toLocaleDateString('ar-EG',{year:'numeric',month:'long',day:'numeric'});
+    const siteName = document.title || 'منصة سلامة الغذاء';
+    const col = complianceColor(Number(pct));
+    const html =
+      '<div class="preview-modal" id="certificate-modal"><div class="preview-panel" style="max-width:640px;">'+
+        '<div class="preview-top" style="margin-bottom:10px;"><b>🏆 شهادة القسم</b><div style="display:flex;gap:6px;">'+
+          '<button class="btn-primary btn-sm" onclick="printCertificate()">🖨️ طباعة / تحميل PDF</button>'+
+          '<button class="btn-secondary btn-sm" onclick="document.getElementById(\'certificate-modal\').remove()">إغلاق ✕</button>'+
+        '</div></div>'+
+        '<div id="certificate-print-area" style="border:6px double '+col+';border-radius:14px;padding:36px 24px;text-align:center;background:#fff;">'+
+          '<div style="font-size:13px;letter-spacing:3px;color:var(--muted);font-weight:700;">'+esc(siteName)+'</div>'+
+          '<div style="font-size:26px;font-weight:900;margin:18px 0 6px;color:var(--text);">شهادة تقدير التزام</div>'+
+          '<div style="font-size:13px;color:var(--muted);margin-bottom:20px;">Certificate of Compliance</div>'+
+          '<div style="font-size:15px;margin-bottom:6px;">تُمنح هذه الشهادة لـ</div>'+
+          '<div style="font-size:22px;font-weight:900;color:var(--primary);margin-bottom:18px;">'+esc(sectionName)+'</div>'+
+          '<div style="font-size:14px;color:var(--muted);margin-bottom:6px;">لتحقيقه نسبة التزام قدرها</div>'+
+          '<div style="font-size:40px;font-weight:900;color:'+col+';margin-bottom:18px;">'+Number(pct).toFixed(1)+'%</div>'+
+          '<div style="font-size:12px;color:var(--muted);margin-top:24px;">بتاريخ: '+dateStr+'</div>'+
+        '</div>'+
+      '</div></div>';
+    document.body.insertAdjacentHTML('beforeend', html);
+  };
+  window.printCertificate = function(){
+    const area=$('certificate-print-area'); if(!area) return;
+    const w=window.open('','_blank');
+    w.document.write('<html><head><title>شهادة</title><style>body{font-family:sans-serif;padding:20px;direction:rtl;}</style></head><body>'+area.outerHTML+'</body></html>');
+    w.document.close();
+    w.focus();
+    setTimeout(()=>w.print(),300);
+  };
+
+  console.log('V2.7 layer loaded — dashboard, compliance score, certificates active.');
+})();}catch(e){console.error('طبقة 7 فشلت:',e);}
 </script>
 </body>
 </html>
