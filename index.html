@@ -110,7 +110,17 @@ body{background:linear-gradient(180deg,#f4f7f9 0%,#eef3f6 100%);font-family:'Cai
 .topic-video-btn{border-radius:12px;min-height:42px}
 .input-field{border-radius:12px;min-height:42px}
 .field-label{letter-spacing:.1px}
-.admin-shell-nav{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:16px;padding:4px}
+.admin-shell-body{display:flex;gap:18px;align-items:flex-start;}
+.admin-shell-nav{display:flex;flex-direction:column;gap:6px;padding:10px;width:230px;flex-shrink:0;background:#fff;border:1px solid var(--border);border-radius:14px;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow-y:auto;}
+.admin-shell-nav .tab-btn{width:100%;justify-content:flex-start;min-height:auto;padding:10px 12px;}
+.admin-content{flex:1;min-width:0;}
+#admin-sidebar-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:60;}
+@media(max-width:900px){
+  #admin-sidebar-toggle{display:flex!important;}
+  .admin-shell-nav{position:fixed;top:0;bottom:0;right:0;height:100vh;max-height:100vh;z-index:70;border-radius:0;transform:translateX(100%);transition:transform .25s ease;width:250px;}
+  .admin-shell-nav.open{transform:translateX(0);box-shadow:-8px 0 24px rgba(0,0,0,.15);}
+}
+@media(min-width:901px){#admin-sidebar-backdrop{display:none!important;}}
 .preview-modal{position:fixed;inset:0;background:rgba(15,23,42,.64);z-index:90;display:flex;align-items:center;justify-content:center;padding:12px}
 .preview-panel{width:100%;max-width:760px;max-height:94vh;overflow:auto;background:#f4f7f9;border-radius:22px;box-shadow:0 24px 70px rgba(0,0,0,.24);padding:14px}
 .preview-panel .preview-top{position:sticky;top:0;z-index:2;background:#fff;border-radius:16px;padding:11px 13px;margin-bottom:12px;border:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -292,12 +302,15 @@ body{background:linear-gradient(180deg,#f4f7f9 0%,#eef3f6 100%);font-family:'Cai
         <div id="admin-scope-display" class="muted" style="font-size:12px;"></div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
+        <button class="icon-btn" id="admin-sidebar-toggle" title="القائمة" onclick="toggleAdminSidebar()" style="display:none;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
         <button class="icon-btn" title="تغيير كلمة السر" onclick="openPasswordChangeModal()"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1.5"/></svg></button>
         <button class="btn-danger btn-sm" onclick="logout()">خروج</button>
       </div>
     </div>
+    <div id="admin-sidebar-backdrop" class="hidden" onclick="toggleAdminSidebar(false)"></div>
 
-    <div class="admin-shell-nav">
+    <div class="admin-shell-body">
+    <div class="admin-shell-nav" id="admin-sidebar">
       <button class="tab-btn active" onclick="adminTab('dashboard')" id="tabbtn-dashboard"><span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="10" width="8" height="11" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/></svg></span><span class="nav-label">لوحة التحكم<span class="nav-en">Dashboard</span></span></button>
       <button class="tab-btn" onclick="adminTab('workers')" id="tabbtn-workers"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="nav-label">الموظفين<span class="nav-en">Workers</span></span></button>
       <button class="tab-btn" onclick="adminTab('sections')" id="tabbtn-sections"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 7h18M3 12h18M3 17h18"/><path d="M6 4v16"/></svg></span><span class="nav-label">الأقسام<span class="nav-en">Sections</span></span></button>
@@ -314,6 +327,7 @@ body{background:linear-gradient(180deg,#f4f7f9 0%,#eef3f6 100%);font-family:'Cai
       <button class="tab-btn" onclick="openAdminPreview()" id="tabbtn-preview"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z"/><circle cx="12" cy="12" r="2.5"/></svg></span><span class="nav-label">معاينة الموظف<span class="nav-en">Worker Preview</span></span></button>
     </div>
 
+    <div class="admin-content">
     <!-- ===== لوحة التحكم ===== -->
     <div class="admin-tab active" id="tab-dashboard">
       <div class="card" style="padding:16px;margin-bottom:14px;">
@@ -340,6 +354,25 @@ body{background:linear-gradient(180deg,#f4f7f9 0%,#eef3f6 100%);font-family:'Cai
           <div style="text-align:center;">
             <div style="font-weight:800;font-size:13px;margin-bottom:10px;">الالتزام العام</div>
             <div id="dashboard-donut" style="width:160px;height:160px;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:16px;margin-bottom:14px;">
+        <div class="section-title" style="margin-bottom:14px;">🗂️ نظرة عامة على الأقسام</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px;">
+          <div class="preview-card" style="margin:0;padding:12px;text-align:center;"><div class="muted" style="font-size:10px;font-weight:700;">إجمالي الأقسام</div><div id="dash-sections-total" style="font-size:22px;font-weight:900;">0</div></div>
+          <div class="preview-card" style="margin:0;padding:12px;text-align:center;background:#ecfdf5;"><div class="muted" style="font-size:10px;font-weight:700;">مواضيع تدريب نشطة</div><div id="dash-topics-active" style="font-size:22px;font-weight:900;color:#16a34a;">0</div></div>
+          <div class="preview-card" style="margin:0;padding:12px;text-align:center;background:#fef2f2;"><div class="muted" style="font-size:10px;font-weight:700;">مواضيع مخفية</div><div id="dash-topics-hidden" style="font-size:22px;font-weight:900;color:#dc2626;">0</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;">
+          <div>
+            <div style="font-weight:700;font-size:12.5px;margin-bottom:8px;color:#166534;">🏆 الأكثر مشاركة والتزامًا</div>
+            <div id="dash-top-sections" style="display:flex;flex-direction:column;gap:6px;"></div>
+          </div>
+          <div>
+            <div style="font-weight:700;font-size:12.5px;margin-bottom:8px;color:#991b1b;">⚠️ يحتاج متابعة (التزام منخفض/غير مستخدم)</div>
+            <div id="dash-follow-sections" style="display:flex;flex-direction:column;gap:6px;"></div>
           </div>
         </div>
       </div>
@@ -581,6 +614,8 @@ body{background:linear-gradient(180deg,#f4f7f9 0%,#eef3f6 100%);font-family:'Cai
         <div id="admins-list" style="display:flex;flex-direction:column;gap:8px;"></div>
       </div>
     </div>
+    </div>
+    </div>
   </section>
 <footer class="footer"><div>© 2026 شركة آفق الحروف التجارية UFUQ | جميع الحقوق محفوظة</div><strong>Prepared by: Eng. Mahmoud Hegazi</strong></footer>
 </main>
@@ -741,6 +776,12 @@ const LANG_FALLBACK_ORDER = {
 // ==================== HELPERS ====================
 function $(id){ return document.getElementById(id); }
 function showToast(msg){ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2800); }
+function toggleAdminSidebar(force){
+  const sb2=$('admin-sidebar'), bd=$('admin-sidebar-backdrop');
+  const willOpen = force===undefined ? !sb2.classList.contains('open') : force;
+  sb2?.classList.toggle('open', willOpen);
+  bd?.classList.toggle('hidden', !willOpen);
+}
 function togglePanel(id){ $(id).classList.toggle('open'); }
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function tr(obj, base){
@@ -2004,7 +2045,7 @@ loadAdminComments = async function(){const {data}=await sb.from('content_comment
 // Hide moderated comments from workers.
 const oldAddComment=addComment;addComment=async function(type,itemId){if(!currentUser)return;const input=$((type==='card'?'ccmt':'vcmt')+'-'+itemId),text=input?.value.trim();if(!text)return showToast('اكتب تعليقك');const {error}=await sb.from('content_comments').insert({item_type:type,item_id:itemId,worker_id:currentUser.id,comment:text,is_visible:true});if(error)return showToast(error.message);input.value='';showToast('تم إرسال تعليقك للأدمن ✅');};
 // Admin tab additions
-const oldAdminTab=adminTab;adminTab=function(tab){document.querySelectorAll('.admin-tab').forEach(e=>e.classList.remove('active'));const t=$('tab-'+tab);if(t)t.classList.add('active');document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));const btn=$('tabbtn-'+tab);if(btn)btn.classList.add('active');if(tab==='workers')loadWorkers();if(tab==='sections')renderAdminSections();if(tab==='roles'){loadV22Meta();}if(tab==='targets'){loadV22Meta();}if(tab==='quizzes')loadAdminQuizzes();if(tab==='cards')loadAdminCards();if(tab==='videos')loadAdminVideos();if(tab==='comments')loadAdminComments();if(tab==='vio-lib')loadViolationLib();if(tab==='admins'){renderAdminAdmins();if(typeof loadDefaultPasswordField==='function')loadDefaultPasswordField();}if(tab==='dashboard'&&typeof loadAdminDashboard==='function')loadAdminDashboard();};
+const oldAdminTab=adminTab;adminTab=function(tab){if(typeof toggleAdminSidebar==='function')toggleAdminSidebar(false);document.querySelectorAll('.admin-tab').forEach(e=>e.classList.remove('active'));const t=$('tab-'+tab);if(t)t.classList.add('active');document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));const btn=$('tabbtn-'+tab);if(btn)btn.classList.add('active');if(tab==='workers')loadWorkers();if(tab==='sections')renderAdminSections();if(tab==='roles'){loadV22Meta();}if(tab==='targets'){loadV22Meta();}if(tab==='quizzes')loadAdminQuizzes();if(tab==='cards')loadAdminCards();if(tab==='videos')loadAdminVideos();if(tab==='comments')loadAdminComments();if(tab==='vio-lib')loadViolationLib();if(tab==='admins'){renderAdminAdmins();if(typeof loadDefaultPasswordField==='function')loadDefaultPasswordField();}if(tab==='dashboard'&&typeof loadAdminDashboard==='function')loadAdminDashboard();};
 // Startup wrapper: load V2.2 metadata after sections are available.
 const oldLoadSections=loadSections;loadSections=async function(){await oldLoadSections();if(adminUser){await loadV22Meta();applyAdminScope();}};
 // Ensure worker questions and cards are loaded from V2.2 after login.
@@ -3504,36 +3545,122 @@ try{(function(){
         '<div style="background:#e2e8f0;border-radius:20px;height:8px;overflow:hidden;"><div style="background:'+complianceColor(r.pct)+';height:100%;width:'+Math.min(100,r.pct)+'%;"></div></div>'+
       '</div>'
     ).join('') || '<div class="muted" style="text-align:center;padding:10px;">لا توجد بيانات كافية بعد</div>';
+
+    /* ---------- نظرة عامة على الأقسام: إجمالي، مواضيع نشطة/مخفية، الأكثر مشاركة، يحتاج متابعة ---------- */
+    const ids2=getAdminScopeIds();
+    let scopedSections = adminUser?.isSuper ? sections.slice() : sections.filter(s=>ids2.includes(Number(s.id)));
+    let topicsAll=[];
+    try{ const {data}=await sb.from('training_topics').select('id,section_id,is_visible'); topicsAll=data||[]; }catch(e){}
+    const scopedSectionIds=new Set(scopedSections.map(s=>String(s.id)));
+    const scopedTopics = topicsAll.filter(t=>!t.section_id || scopedSectionIds.has(String(t.section_id)));
+    const activeTopics = scopedTopics.filter(t=>t.is_visible).length;
+    const hiddenTopics = scopedTopics.filter(t=>!t.is_visible).length;
+    if($('dash-sections-total')) $('dash-sections-total').textContent = scopedSections.length;
+    if($('dash-topics-active')) $('dash-topics-active').textContent = activeTopics;
+    if($('dash-topics-hidden')) $('dash-topics-hidden').textContent = hiddenTopics;
+
+    // كل الأقسام (حتى اللي مفيهاش موظفين خالص، عشان تظهر كـ"مش مستخدمة")
+    const fullRows = scopedSections.map(s=>{
+      const found=rows.find(r=>String(r.sid)===String(s.id));
+      return found || {sid:String(s.id), name:tr(s,'name'), pct:0, count:0};
+    });
+    const topBox=$('dash-top-sections'), followBox=$('dash-follow-sections');
+    const topList = fullRows.filter(r=>r.count>0).slice().sort((a,b)=>b.pct-a.pct).slice(0,3);
+    const followList = fullRows.filter(r=>r.count===0 || r.pct<50).slice().sort((a,b)=>a.pct-b.pct).slice(0,5);
+    if(topBox) topBox.innerHTML = topList.map(r=>
+      '<div style="background:#ecfdf5;border:1px solid #bbf7d0;border-radius:8px;padding:8px 11px;display:flex;justify-content:space-between;"><span style="font-size:12px;font-weight:700;">🏢 '+esc(r.name)+'</span><b style="font-size:12px;color:#16a34a;">'+Math.round(r.pct)+'%</b></div>'
+    ).join('') || '<div class="muted" style="font-size:12px;">لا توجد بيانات كافية بعد</div>';
+    if(followBox) followBox.innerHTML = followList.map(r=>
+      '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:8px 11px;display:flex;justify-content:space-between;"><span style="font-size:12px;font-weight:700;">🏢 '+esc(r.name)+'</span><b style="font-size:12px;color:#dc2626;">'+(r.count===0?'غير مستخدم':Math.round(r.pct)+'%')+'</b></div>'
+    ).join('') || '<div class="muted" style="font-size:12px;">كل الأقسام في حالة جيدة ✅</div>';
   };
 
   /* ---------- شهادة قسم (عرض + طباعة/PDF) ---------- */
+  const CERT_TEXT = {
+    ar: {
+      title:'شكر وتقدير', subtitle:'تُمنح هذه الشهادة بكل فخر إلى',
+      body:(name,pct)=>'تتقدّم إدارة الجودة بجزيل الشكر والتقدير إلى «'+name+'» لتحقيقه نسبة التزام متميزة بلغت '+pct+'% في معايير السلامة والجودة، ونتمنى له دوام التميز والريادة.',
+      grant:'مُنحت بكل حب وتقدير', sigLabel:'التوقيع', dateLabel:'التاريخ'
+    },
+    en: {
+      title:'Certificate of Appreciation', subtitle:'This certificate is proudly presented to',
+      body:(name,pct)=>'The Quality Management extends its sincere appreciation to "'+name+'" for achieving an outstanding compliance rate of '+pct+'% in safety and quality standards, wishing continued excellence and leadership.',
+      grant:'Presented with pride and appreciation', sigLabel:'Signature', dateLabel:'Date'
+    }
+  };
+  let certState = {};
   window.openCertificateModal = function(sectionId, sectionName, pct){
-    const dateStr = new Date().toLocaleDateString('ar-EG',{year:'numeric',month:'long',day:'numeric'});
-    const siteName = document.title || 'منصة سلامة الغذاء';
-    const col = complianceColor(Number(pct));
+    certState = { sectionName, pct:Number(pct).toFixed(1), lang:'ar', date:new Date().toISOString().slice(0,10), sig:'', note:'' };
     const html =
-      '<div class="preview-modal" id="certificate-modal"><div class="preview-panel" style="max-width:640px;">'+
-        '<div class="preview-top" style="margin-bottom:10px;"><b>🏆 شهادة القسم</b><div style="display:flex;gap:6px;">'+
-          '<button class="btn-primary btn-sm" onclick="printCertificate()">🖨️ طباعة / تحميل PDF</button>'+
-          '<button class="btn-secondary btn-sm" onclick="document.getElementById(\'certificate-modal\').remove()">إغلاق ✕</button>'+
-        '</div></div>'+
-        '<div id="certificate-print-area" style="border:6px double '+col+';border-radius:14px;padding:36px 24px;text-align:center;background:#fff;">'+
-          '<div style="font-size:13px;letter-spacing:3px;color:var(--muted);font-weight:700;">'+esc(siteName)+'</div>'+
-          '<div style="font-size:26px;font-weight:900;margin:18px 0 6px;color:var(--text);">شهادة تقدير التزام</div>'+
-          '<div style="font-size:13px;color:var(--muted);margin-bottom:20px;">Certificate of Compliance</div>'+
-          '<div style="font-size:15px;margin-bottom:6px;">تُمنح هذه الشهادة لـ</div>'+
-          '<div style="font-size:22px;font-weight:900;color:var(--primary);margin-bottom:18px;">'+esc(sectionName)+'</div>'+
-          '<div style="font-size:14px;color:var(--muted);margin-bottom:6px;">لتحقيقه نسبة التزام قدرها</div>'+
-          '<div style="font-size:40px;font-weight:900;color:'+col+';margin-bottom:18px;">'+Number(pct).toFixed(1)+'%</div>'+
-          '<div style="font-size:12px;color:var(--muted);margin-top:24px;">بتاريخ: '+dateStr+'</div>'+
+      '<div class="preview-modal" id="certificate-modal"><div class="preview-panel" style="max-width:680px;">'+
+        '<div class="preview-top" style="margin-bottom:10px;"><b>🏆 شهادة القسم</b><button class="btn-secondary btn-sm" onclick="document.getElementById(\'certificate-modal\').remove()">إغلاق ✕</button></div>'+
+        '<div style="background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">'+
+          '<div><label class="field-label">لغة محتوى الشهادة</label><div style="display:flex;gap:6px;"><button class="btn-secondary btn-sm" id="cert-lang-ar" style="flex:1;" onclick="setCertLang(\'ar\')">🇸🇦 عربي</button><button class="btn-secondary btn-sm" id="cert-lang-en" style="flex:1;" onclick="setCertLang(\'en\')">🇬🇧 English</button></div></div>'+
+          '<div><label class="field-label">التاريخ</label><input id="cert-date" type="date" class="input-field" value="'+certState.date+'" onchange="renderCertificatePreview()"/></div>'+
+          '<div><label class="field-label">اسم الموقّع / التوقيع</label><input id="cert-sig" type="text" class="input-field" placeholder="مثال: مدير الجودة" oninput="renderCertificatePreview()"/></div>'+
+          '<div><label class="field-label">جملة إضافية (اختياري)</label><input id="cert-note" type="text" class="input-field" placeholder="أي جملة حابب تضيفها" oninput="renderCertificatePreview()"/></div>'+
         '</div>'+
+        '<div style="text-align:center;margin-bottom:12px;"><button class="btn-primary btn-sm" onclick="printCertificate()">🖨️ طباعة / تحميل PDF</button></div>'+
+        '<div id="certificate-print-area"></div>'+
       '</div></div>';
     document.body.insertAdjacentHTML('beforeend', html);
+    setCertLang('ar');
+  };
+  window.setCertLang = function(lang){
+    certState.lang = lang;
+    $('cert-lang-ar')?.classList.toggle('btn-primary', lang==='ar');
+    $('cert-lang-ar')?.classList.toggle('btn-secondary', lang!=='ar');
+    $('cert-lang-en')?.classList.toggle('btn-primary', lang==='en');
+    $('cert-lang-en')?.classList.toggle('btn-secondary', lang!=='en');
+    renderCertificatePreview();
+  };
+  window.renderCertificatePreview = function(){
+    const area=$('certificate-print-area'); if(!area) return;
+    certState.date = $('cert-date')?.value || certState.date;
+    certState.sig = $('cert-sig')?.value || '';
+    certState.note = $('cert-note')?.value || '';
+    const T = CERT_TEXT[certState.lang] || CERT_TEXT.ar;
+    const dateObj = new Date(certState.date+'T00:00:00');
+    const dateStr = isNaN(dateObj) ? certState.date : dateObj.toLocaleDateString(certState.lang==='ar'?'ar-EG':'en-GB',{year:'numeric',month:'long',day:'numeric'});
+    const dir = certState.lang==='ar' ? 'rtl' : 'ltr';
+    const siteName = document.title || 'Food Safety Platform';
+    area.innerHTML =
+      '<div style="border-radius:16px;overflow:hidden;border:1px solid #e2e8f0;font-family:inherit;direction:'+dir+';" dir="'+dir+'">'+
+        '<div style="position:relative;background:linear-gradient(135deg,#0f172a,#1e293b);padding:26px 30px;overflow:hidden;">'+
+          '<div style="position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(255,255,255,.04) 0 10px,transparent 10px 20px);"></div>'+
+          '<div style="position:relative;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;">'+
+            '<div style="width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#e2e8f0,#94a3b8 60%,#64748b);display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 3px 10px rgba(0,0,0,.3);flex-shrink:0;">🏅</div>'+
+            '<div style="text-align:'+(certState.lang==='ar'?'right':'left')+';">'+
+              '<div style="font-size:24px;font-weight:900;color:#fff;">'+esc(T.title)+'</div>'+
+              '<div style="font-size:12px;color:#cbd5e1;margin-top:3px;">'+esc(T.subtitle)+'</div>'+
+            '</div>'+
+          '</div>'+
+        '</div>'+
+        '<div style="background:#fff;padding:34px 26px;text-align:center;">'+
+          '<div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:20px;">'+
+            '<div style="flex:1;max-width:80px;border-top:1px dashed #cbd5e1;"></div>'+
+            '<div style="font-size:28px;font-weight:900;color:#0f172a;">'+esc(certState.sectionName)+'</div>'+
+            '<div style="flex:1;max-width:80px;border-top:1px dashed #cbd5e1;"></div>'+
+          '</div>'+
+          '<div style="font-size:14px;color:#475569;line-height:1.9;max-width:480px;margin:0 auto 10px;">'+esc(T.body(certState.sectionName, certState.pct))+'</div>'+
+          (certState.note ? '<div style="font-size:13px;color:#334155;font-style:italic;margin-bottom:10px;">'+esc(certState.note)+'</div>' : '')+
+          '<div style="font-size:14px;font-weight:700;color:#0f172a;margin:14px 0 26px;">'+esc(T.grant)+'</div>'+
+          '<div style="display:flex;justify-content:space-between;align-items:flex-end;max-width:420px;margin:0 auto;gap:14px;flex-wrap:wrap;">'+
+            '<div style="text-align:center;"><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:4px;">'+esc(T.sigLabel)+'</div>'+
+              (certState.sig?'<div style="font-family:cursive;font-size:16px;color:#0f172a;border-bottom:1px dotted #cbd5e1;padding-bottom:4px;min-width:120px;">'+esc(certState.sig)+'</div>':'<div style="border-bottom:1px dotted #cbd5e1;min-width:120px;height:20px;"></div>')+
+            '</div>'+
+            '<div style="text-align:center;"><div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:4px;">'+esc(T.dateLabel)+'</div>'+
+              '<div style="font-size:13px;font-weight:700;color:#0f172a;border-bottom:1px dotted #cbd5e1;padding-bottom:4px;min-width:120px;">'+esc(dateStr)+'</div>'+
+            '</div>'+
+          '</div>'+
+          '<div style="font-size:10px;letter-spacing:2px;color:#cbd5e1;margin-top:26px;">'+esc(siteName)+'</div>'+
+        '</div>'+
+      '</div>';
   };
   window.printCertificate = function(){
     const area=$('certificate-print-area'); if(!area) return;
     const w=window.open('','_blank');
-    w.document.write('<html><head><title>شهادة</title><style>body{font-family:sans-serif;padding:20px;direction:rtl;}</style></head><body>'+area.outerHTML+'</body></html>');
+    w.document.write('<html><head><title>شهادة</title><style>body{font-family:sans-serif;padding:20px;}</style></head><body>'+area.innerHTML+'</body></html>');
     w.document.close();
     w.focus();
     setTimeout(()=>w.print(),300);
