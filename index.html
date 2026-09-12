@@ -54,6 +54,11 @@
   .icon-btn{width:36px;height:36px;border-radius:10px;background:#f1f5f9;border:1px solid var(--border);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s;flex-shrink:0;}
   .icon-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary);}
   .login-split{display:flex;min-height:90vh;width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);}
+  body.on-login{overflow:hidden;height:100vh;}
+  body.on-login .app-main{padding:0;max-width:none;min-height:100vh;}
+  body.on-login .login-split{min-height:100vh;}
+  body.on-login .footer{display:none;}
+  body.on-admin .app-main{max-width:1520px;}
   .login-hero{flex:1.1;background:linear-gradient(160deg,#0f2e22,#0a1f18 60%,#08170f);position:relative;overflow:hidden;padding:44px 40px;display:flex;align-items:center;}
   .login-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 80% 20%,rgba(110,231,183,.12),transparent 55%);}
   .login-form-side{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;}
@@ -489,6 +494,7 @@ body{background:linear-gradient(180deg,#f4f7f9 0%,#eef3f6 100%);font-family:'Cai
         <div class="section-title" style="margin-bottom:12px;">➕ إضافة إدارة / جهة مستهدفة</div>
         <input id="target-ar" type="text" class="input-field" placeholder="مثال: إدارة الجودة" onblur="autoTranslateGroup('target-ar',{en:'target-en'})"/>
         <input id="target-en" type="text" class="input-field" style="margin-top:8px;" placeholder="Target Department (English)"/>
+        <label style="display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-top:8px;cursor:pointer;"><input id="target-is-admin" type="checkbox"/> 🛡️ إدارة إدارية (أي موظف تابع لها يتحول أدمن فرعي تلقائيًا مقيد بقسمه)</label>
         <button class="btn-primary" style="padding:10px 22px;font-size:13px;margin-top:10px;" onclick="saveTargetDepartmentV22()">حفظ الإدارة</button>
       </div>
       <div class="card" style="padding:16px;"><div class="section-title" style="margin-bottom:12px;">الإدارات الحالية</div><div id="targets-list" style="display:flex;flex-direction:column;gap:8px;"></div></div>
@@ -991,6 +997,7 @@ async function doLogin(){
   updateWorkerHeader(); loadWorkerData();
 }
 async function enterAdmin(){
+  document.body.classList.remove('on-login'); document.body.classList.add('on-admin');
   $('login-section').classList.add('hidden');
   $('admin-section').classList.remove('hidden'); $('admin-section').style.display='block';
   await loadBranding(); await loadSections();
@@ -1022,6 +1029,7 @@ function updateWorkerHeader(){
 }
 function logout(){
   currentUser=null; adminUser=null; destroyAllPlayers();
+  document.body.classList.remove('on-admin'); document.body.classList.add('on-login');
   ['worker-section','admin-section'].forEach(id=>{ $(id).classList.add('hidden'); $(id).style.display='none'; });
   $('login-section').classList.remove('hidden'); $('login-id').value=''; $('login-error').classList.add('hidden');
   if($('login-password')) $('login-password').value='';
@@ -2036,6 +2044,7 @@ async function loadWorkerData(){
 
 // ==================== INIT ====================
 window.addEventListener('DOMContentLoaded', ()=>{
+  document.body.classList.add('on-login');
   renderLangButtons(); loadBranding(); if(typeof applyLoginTexts==='function') applyLoginTexts();
   // ربط البحث بالكتابة
   const ws=$('worker-search'); ws.addEventListener('input', ()=>{ setTimeout(loadWorkers, 250); });
@@ -2060,12 +2069,19 @@ function populateV22Dropdowns(){
   const box=$('ad-sections-box'); if(box) box.innerHTML=sections.map(s=>'<label style="display:flex;align-items:center;gap:5px;font-size:11px;background:#fff;border:1px solid var(--border);border-radius:7px;padding:6px;"><input type="checkbox" class="ad-section-v22" value="'+s.id+'"/> '+esc(tr(s,'name'))+'</label>').join('')||'<span class="muted">لا توجد أقسام</span>';
 }
 function renderJobRolesV22(){const b=$('roles-list');if(!b)return;b.innerHTML=jobRolesV22.map(r=>'<div class="card" style="padding:10px 14px;display:flex;justify-content:space-between;align-items:center;"><span><b>'+esc(r.name_ar)+'</b>'+(r.name_en?'<span class="muted" style="font-size:10px;margin-right:8px;">'+esc(r.name_en)+'</span>':'')+'</span><span><button class="btn-secondary btn-sm" onclick="editJobRoleV22('+r.id+')">تعديل</button> <button class="btn-danger btn-sm" onclick="deleteJobRoleV22('+r.id+')">حذف</button></span></div>').join('')||'<div class="muted">لا توجد وظائف بعد</div>';}
-function renderTargetDepartmentsV22(){const b=$('targets-list');if(!b)return;b.innerHTML=targetDepartmentsV22.map(r=>'<div class="card" style="padding:10px 14px;display:flex;justify-content:space-between;align-items:center;"><span><b>'+esc(r.name_ar)+'</b></span><span><button class="btn-secondary btn-sm" onclick="editTargetDepartmentV22('+r.id+')">تعديل</button> <button class="btn-danger btn-sm" onclick="deleteTargetDepartmentV22('+r.id+')">حذف</button></span></div>').join('')||'<div class="muted">لا توجد إدارات بعد</div>';}
+function renderTargetDepartmentsV22(){const b=$('targets-list');if(!b)return;b.innerHTML=targetDepartmentsV22.map(r=>'<div class="card" style="padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;"><span><b>'+esc(r.name_ar)+'</b>'+(r.is_admin_department?' <span class="badge badge-green" style="font-size:9px;">🛡️ إدارة إدارية</span>':'')+'</span><span style="display:flex;gap:5px;flex-wrap:wrap;"><button class="btn-secondary btn-sm" onclick="toggleAdminDepartmentV22('+r.id+','+(!r.is_admin_department)+')">'+(r.is_admin_department?'إلغاء صفة إدارية':'اجعلها إدارة إدارية')+'</button><button class="btn-secondary btn-sm" onclick="editTargetDepartmentV22('+r.id+')">تعديل</button> <button class="btn-danger btn-sm" onclick="deleteTargetDepartmentV22('+r.id+')">حذف</button></span></div>').join('')||'<div class="muted">لا توجد إدارات بعد</div>';}
+async function toggleAdminDepartmentV22(id, val){
+  let {error}=await sb.from('target_departments').update({is_admin_department:val}).eq('id',id);
+  if(error && /is_admin_department/i.test(error.message||'')){ showToast('عمود is_admin_department لسه مش مضاف في قاعدة البيانات — شغّل الـSQL المطلوب الأول'); return; }
+  if(error) return showToast(error.message);
+  showToast(val?'أصبحت إدارة إدارية ✅':'تم إلغاء الصفة الإدارية ✅');
+  await loadV22Meta();
+}
 function renderAdminSectionsV22(){ if(typeof renderAdminSections==='function') renderAdminSections(); }
 async function saveJobRoleV22(){const ar=$('role-ar')?.value.trim();if(!ar)return showToast('اكتب اسم الوظيفة');const en=$('role-en')?.value.trim();const {error}=await sb.from('job_roles').insert({name_ar:ar,name_en:en,is_active:true});if(error)return showToast('تعذر حفظ الوظيفة: '+error.message);$('role-ar').value='';$('role-en').value='';await loadV22Meta();showToast('تم حفظ الوظيفة ✅');}
 async function editJobRoleV22(id){const r=jobRolesV22.find(x=>x.id===id);if(!r)return;const ar=prompt('اسم الوظيفة / الدور',r.name_ar);if(ar===null)return;const en=prompt('English',r.name_en||'');const {error}=await sb.from('job_roles').update({name_ar:ar.trim(),name_en:en.trim()}).eq('id',id);if(error)return showToast(error.message);await loadV22Meta();}
 async function deleteJobRoleV22(id){const used=await sb.from('workers_evaluations').select('id',{count:'exact',head:true}).eq('job_role_id',id);if((used.count||0)>0)return showToast('لا يمكن حذف وظيفة مستخدمة. عدّل الموظفين أولاً.');if(!confirm('حذف الوظيفة؟'))return;await sb.from('job_roles').delete().eq('id',id);await loadV22Meta();showToast('تم الحذف');}
-async function saveTargetDepartmentV22(){const ar=$('target-ar')?.value.trim();if(!ar)return showToast('اكتب اسم الإدارة');const en=$('target-en')?.value.trim();const {error}=await sb.from('target_departments').insert({name_ar:ar,name_en:en,is_active:true});if(error)return showToast('تعذر حفظ الإدارة: '+error.message);$('target-ar').value='';$('target-en').value='';await loadV22Meta();showToast('تم حفظ الإدارة ✅');}
+async function saveTargetDepartmentV22(){const ar=$('target-ar')?.value.trim();if(!ar)return showToast('اكتب اسم الإدارة');const en=$('target-en')?.value.trim();const isAdminDept=$('target-is-admin')?.checked||false;let {error}=await sb.from('target_departments').insert({name_ar:ar,name_en:en,is_active:true,is_admin_department:isAdminDept});if(error && /is_admin_department/i.test(error.message||'')){({error}=await sb.from('target_departments').insert({name_ar:ar,name_en:en,is_active:true}));}if(error)return showToast('تعذر حفظ الإدارة: '+error.message);$('target-ar').value='';$('target-en').value='';if($('target-is-admin'))$('target-is-admin').checked=false;await loadV22Meta();showToast('تم حفظ الإدارة ✅');}
 async function editTargetDepartmentV22(id){const r=targetDepartmentsV22.find(x=>x.id===id);if(!r)return;const ar=prompt('اسم الإدارة',r.name_ar);if(ar===null)return;const en=prompt('English',r.name_en||'');const {error}=await sb.from('target_departments').update({name_ar:ar.trim(),name_en:en.trim()}).eq('id',id);if(error)return showToast(error.message);await loadV22Meta();}
 async function deleteTargetDepartmentV22(id){if(!confirm('حذف الإدارة؟'))return;const {error}=await sb.from('target_departments').delete().eq('id',id);if(error)return showToast('لا يمكن الحذف إذا كانت مستخدمة. '+error.message);await loadV22Meta();showToast('تم الحذف');}
 async function loadAdminSectionsMultiV22(adminId){const {data}=await sb.from('admin_sections').select('section_id').eq('admin_id',adminId);return (data||[]).map(x=>x.section_id);}
@@ -2324,6 +2340,7 @@ doLogin=doLoginV23;
 let pendingLoginWorker=null, pendingLoginAdmin=null;
 async function enterAsWorkerFinal(worker){
   currentUser=worker; adminUser=null;
+  document.body.classList.remove('on-login','on-admin');
   $('login-section').classList.add('hidden'); $('worker-section').classList.remove('hidden'); $('worker-section').style.display='block';
   await loadBranding(); await loadSections();
   if($('worker-name-display')) $('worker-name-display').textContent=worker.worker_name;
