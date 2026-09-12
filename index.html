@@ -676,6 +676,11 @@ body{background:linear-gradient(180deg,#f4f7f9 0%,#eef3f6 100%);font-family:'Cai
         <button class="btn-primary" style="padding:10px 22px;font-size:13px;" onclick="saveAdmin()">منح صلاحية الأدمن</button>
         <div id="add-admin-msg" style="font-size:12px;margin-top:8px;"></div>
       </div>
+      <div class="card" style="padding:16px;margin-bottom:14px;">
+        <div class="section-title" style="margin-bottom:6px;">🛡️ أدمن تلقائي (بحكم الإدارة)</div>
+        <p class="muted" style="font-size:12px;margin-bottom:10px;">موظفين تابعين لإدارة معلّمة كـ"إدارية" وأصبحوا أدمن فرعي تلقائيًا. تقدر تستثني أي حد منهم فيرجع موظف عادي.</p>
+        <div id="auto-admins-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+      </div>
       <div class="card" style="padding:16px;">
         <div class="section-title" style="margin-bottom:12px;">الأدمن الحاليين</div>
         <div id="admins-list" style="display:flex;flex-direction:column;gap:8px;"></div>
@@ -2134,7 +2139,7 @@ loadAdminComments = async function(){const {data}=await sb.from('content_comment
 // Hide moderated comments from workers.
 const oldAddComment=addComment;addComment=async function(type,itemId){if(!currentUser)return;const input=$((type==='card'?'ccmt':'vcmt')+'-'+itemId),text=input?.value.trim();if(!text)return showToast('اكتب تعليقك');const {error}=await sb.from('content_comments').insert({item_type:type,item_id:itemId,worker_id:currentUser.id,comment:text,is_visible:true});if(error)return showToast(error.message);input.value='';showToast('تم إرسال تعليقك للأدمن ✅');};
 // Admin tab additions
-const oldAdminTab=adminTab;adminTab=function(tab){if(typeof toggleAdminSidebar==='function')toggleAdminSidebar(false);document.querySelectorAll('.admin-tab').forEach(e=>e.classList.remove('active'));const t=$('tab-'+tab);if(t)t.classList.add('active');document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));const btn=$('tabbtn-'+tab);if(btn)btn.classList.add('active');if(tab==='workers')loadWorkers();if(tab==='sections')renderAdminSections();if(tab==='roles'){loadV22Meta();}if(tab==='targets'){loadV22Meta();}if(tab==='quizzes')loadAdminQuizzes();if(tab==='cards')loadAdminCards();if(tab==='videos')loadAdminVideos();if(tab==='comments')loadAdminComments();if(tab==='vio-lib')loadViolationLib();if(tab==='admins'){renderAdminAdmins();if(typeof loadDefaultPasswordField==='function')loadDefaultPasswordField();}if(tab==='dashboard'&&typeof loadAdminDashboard==='function')loadAdminDashboard();};
+const oldAdminTab=adminTab;adminTab=function(tab){if(typeof toggleAdminSidebar==='function')toggleAdminSidebar(false);document.querySelectorAll('.admin-tab').forEach(e=>e.classList.remove('active'));const t=$('tab-'+tab);if(t)t.classList.add('active');document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));const btn=$('tabbtn-'+tab);if(btn)btn.classList.add('active');if(tab==='workers')loadWorkers();if(tab==='sections')renderAdminSections();if(tab==='roles'){loadV22Meta();}if(tab==='targets'){loadV22Meta();}if(tab==='quizzes')loadAdminQuizzes();if(tab==='cards')loadAdminCards();if(tab==='videos')loadAdminVideos();if(tab==='comments')loadAdminComments();if(tab==='vio-lib')loadViolationLib();if(tab==='admins'){renderAdminAdmins();if(typeof loadDefaultPasswordField==='function')loadDefaultPasswordField();if(typeof renderAutoAdminsList==='function')renderAutoAdminsList();}if(tab==='dashboard'&&typeof loadAdminDashboard==='function')loadAdminDashboard();};
 // Startup wrapper: load V2.2 metadata after sections are available.
 const oldLoadSections=loadSections;loadSections=async function(){await oldLoadSections();if(adminUser){await loadV22Meta();applyAdminScope();}};
 // Ensure worker questions and cards are loaded from V2.2 after login.
@@ -2355,6 +2360,8 @@ window.chooseLoginRole=async function(role){
   } else {
     if(adm.is_super){
       adminUser={isSuper:true,name:worker.worker_name,section_id:null,section_ids:sections.map(s=>s.id),id:adm.id,workerId:worker.id};
+    } else if(adm.auto){
+      adminUser={isSuper:false,name:worker.worker_name,section_id:worker.section_id,section_ids:[Number(worker.section_id)].filter(Boolean),id:null,workerId:worker.id,autoAdmin:true};
     } else {
       const ids=await loadAdminSectionsMultiV23(adm.id); if(!ids.length&&adm.section_id) ids.push(Number(adm.section_id));
       adminUser={isSuper:false,name:worker.worker_name,section_id:ids[0]||null,section_ids:ids,id:adm.id,workerId:worker.id};
@@ -2379,6 +2386,20 @@ async function doLoginFinal(){
   if(expected && pass!==expected){ err.textContent='كلمة السر غير صحيحة / Incorrect password'; err.classList.remove('hidden'); return; }
   let adminLink=null;
   try{ const {data}=await sb.from('admins').select('*').eq('worker_id',worker.id).maybeSingle(); adminLink=data; }catch(e){}
+  if(!adminLink){
+    // فحص "الإدارة الإدارية": لو وظيفة الموظف تابعة لإدارة معلّمة كـ"إدارية"، ومش مستثنى، يبقى أدمن فرعي تلقائي مقيد بقسمه
+    try{
+      if(!worker.admin_auto_excluded && worker.job_role_id){
+        const {data:role}=await sb.from('job_roles').select('target_department_id').eq('id',worker.job_role_id).maybeSingle();
+        if(role?.target_department_id){
+          const {data:dept}=await sb.from('target_departments').select('is_admin_department,name_ar').eq('id',role.target_department_id).maybeSingle();
+          if(dept?.is_admin_department){
+            adminLink = { is_super:false, section_id: worker.section_id, auto:true, deptName: dept.name_ar };
+          }
+        }
+      }
+    }catch(e){ /* الأعمدة الجديدة لسه مش مضافة، نتجاهل بأمان */ }
+  }
   if(adminLink){
     pendingLoginWorker=worker; pendingLoginAdmin=adminLink;
     $('login-form-card')?.classList.add('hidden');
@@ -3814,6 +3835,51 @@ try{(function(){
   adminTab=function(tab){ oldAdminTabForLoginTexts(tab); if(tab==='branding' && typeof loadLoginTextsForAdmin==='function') loadLoginTextsForAdmin(); };
   console.log('V2.8 layer loaded — editable login page texts active.');
 })();}catch(e){console.error('طبقة 8 فشلت:',e);}
+
+/* ==================== طبقة 9: أدمن تلقائي بحكم الإدارة (الجودة مثلاً) ==================== */
+try{(function(){
+  window.renderAutoAdminsList = async function(){
+    const box=$('auto-admins-list'); if(!box) return;
+    box.innerHTML='<div class="muted" style="font-size:12px;">جاري التحميل...</div>';
+    try{
+      const {data:depts}=await sb.from('target_departments').select('id,name_ar').eq('is_admin_department',true);
+      if(!depts || !depts.length){ box.innerHTML='<div class="muted" style="font-size:12px;">لا توجد إدارات إدارية معلّمة حاليًا (من تاب "الإدارات المستهدفة")</div>'; return; }
+      const deptIds=depts.map(d=>d.id);
+      const {data:roles}=await sb.from('job_roles').select('id,name_ar,target_department_id').in('target_department_id',deptIds);
+      if(!roles || !roles.length){ box.innerHTML='<div class="muted" style="font-size:12px;">مفيش وظائف مربوطة بالإدارات الإدارية دي لسه</div>'; return; }
+      const roleIds=roles.map(r=>r.id);
+      const ids=getAdminScopeIds();
+      let wq=sb.from('workers_evaluations').select('id,worker_name,section_id,job_role_id,admin_auto_excluded').in('job_role_id',roleIds);
+      if(!adminUser?.isSuper && ids.length) wq=wq.in('section_id',ids);
+      const {data:workers}=await wq;
+      const roleMap={}; roles.forEach(r=>roleMap[r.id]=r);
+      const deptMap={}; depts.forEach(d=>deptMap[d.id]=d.name_ar);
+      const active=(workers||[]).filter(w=>!w.admin_auto_excluded);
+      const excluded=(workers||[]).filter(w=>w.admin_auto_excluded);
+      box.innerHTML =
+        (active.length ? active.map(w=>{
+          const role=roleMap[w.job_role_id]; const dept=role?deptMap[role.target_department_id]:'';
+          const sec=sections.find(s=>String(s.id)===String(w.section_id));
+          return '<div class="card" style="padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;"><span><b>#'+w.id+' '+esc(w.worker_name)+'</b> <span class="muted" style="font-size:11px;">('+esc(dept||'')+' — '+esc(sec?tr(sec,'name'):'')+')</span></span><button class="btn-danger btn-sm" onclick="excludeFromAutoAdmin('+w.id+')">🚫 استثناء (يرجع موظف عادي)</button></div>';
+        }).join('') : '<div class="muted" style="font-size:12px;">لا يوجد موظفين بحكم الإدارة الإدارية حاليًا</div>')
+        + (excluded.length ? '<div class="muted" style="font-size:11px;margin-top:10px;">مستثنون: '+excluded.map(w=>'#'+w.id+' '+esc(w.worker_name)).join('، ')+' <button class="btn-secondary btn-sm" style="margin-right:6px;" onclick="undoExcludeMenu()">↩️ رجّع أحد</button></div>' : '');
+    }catch(e){ box.innerHTML='<div class="muted" style="font-size:12px;">تعذر التحميل: '+esc(e.message||'')+' (تأكد من إضافة عمودي is_admin_department و admin_auto_excluded)</div>'; }
+  };
+  window.excludeFromAutoAdmin = async function(workerId){
+    if(!confirm('متأكد؟ الموظف ده هيرجع موظف عادي فورًا ومش هيقدر يدخل كأدمن تاني إلا لو رجعت الاستثناء.')) return;
+    const {error}=await sb.from('workers_evaluations').update({admin_auto_excluded:true}).eq('id',workerId);
+    if(error) return showToast('خطأ: '+error.message);
+    showToast('تم الاستثناء ✅'); renderAutoAdminsList();
+  };
+  window.undoExcludeMenu = async function(){
+    const id=prompt('اكتب رقم هوية الموظف اللي عايز ترجّعه أدمن تلقائي تاني:');
+    if(!id) return;
+    const {error}=await sb.from('workers_evaluations').update({admin_auto_excluded:false}).eq('id',parseInt(id));
+    if(error) return showToast('خطأ: '+error.message);
+    showToast('تم الإرجاع ✅'); renderAutoAdminsList();
+  };
+  console.log('V2.9 layer loaded — department-based auto-admin active.');
+})();}catch(e){console.error('طبقة 9 فشلت:',e);}
 </script>
 </body>
 </html>
