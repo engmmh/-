@@ -38,7 +38,8 @@
   .wm-filter-chip.active{background:var(--text);color:#fff;border-color:var(--text);}
   .badge.has-more::after{content:'‹ ‹';display:inline-block;margin-right:5px;font-size:9px;opacity:.75;animation:swipeHint 1.6s ease-in-out infinite;}
   @keyframes swipeHint{0%,100%{transform:translateX(0);opacity:.4;}50%{transform:translateX(-3px);opacity:.9;}}
-  .wicon-row{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:14px;}
+  .wicon-row{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin-bottom:14px;}
+  @media(max-width:420px){.wicon-row{grid-template-columns:repeat(3,1fr);}}
   .wicon-btn{position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px 6px;cursor:pointer;font-family:inherit;transition:.15s;box-shadow:0 1px 3px rgba(0,0,0,.04);}
   .wicon-btn:hover{border-color:var(--primary-light);transform:translateY(-1px);}
   .wicon-btn.active{background:linear-gradient(160deg,var(--primary),var(--primary-light));border-color:var(--primary);}
@@ -289,6 +290,11 @@ body{background:linear-gradient(180deg,#f4f7f9 0%,#eef3f6 100%);font-family:'Cai
         <span class="wicon-emoji">⚠️</span>
         <span class="wicon-label" id="wicon-label-violations">مخالفاتي</span>
       </button>
+      <button class="wicon-btn" id="wicon-btn-onsite" onclick="toggleWorkerSection('onsite')">
+        <span class="wicon-badge hidden" id="wicon-badge-onsite">0</span>
+        <span class="wicon-emoji">🎓</span>
+        <span class="wicon-label" id="wicon-label-onsite">تدريبات ميدانية</span>
+      </button>
     </div>
 
     <!-- الفيديوهات -->
@@ -325,6 +331,12 @@ body{background:linear-gradient(180deg,#f4f7f9 0%,#eef3f6 100%);font-family:'Cai
         <button class="btn-secondary btn-sm" id="wt-violations-viewall" style="font-size:11px;" onclick="toggleWorkerViolationsView()">عرض الكل</button>
       </div>
       <div id="worker-violations-box"></div>
+    </div>
+
+    <!-- التدريبات الميدانية -->
+    <div class="card wsec-panel hidden" id="wsec-panel-onsite" style="padding:16px;margin-bottom:14px;">
+      <div class="section-title" id="wt-onsite-title" style="margin-bottom:12px;">🎓 التدريبات الميدانية</div>
+      <div id="worker-onsite-box"></div>
     </div>
 
     <!-- أسئلتي وتعليقاتي (ملخص) -->
@@ -367,6 +379,7 @@ body{background:linear-gradient(180deg,#f4f7f9 0%,#eef3f6 100%);font-family:'Cai
       <button class="tab-btn" onclick="adminTab('comments')" id="tabbtn-comments" data-label="التعليقات"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 11.5a7.5 7.5 0 0 1-8 7.5 8 8 0 0 1-4-.99L4 20l1.5-3.5A7.5 7.5 0 1 1 20 11.5z"/></svg></span><span class="nav-label">التعليقات<span class="nav-en">Comments</span></span></button>
       <button class="tab-btn" onclick="adminTab('branding')" id="tabbtn-branding" data-label="الهوية"><span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.41 1.41-.06-.06A1.7 1.7 0 0 0 16.45 18a1.7 1.7 0 0 0-1.03 1.55V20h-2v-.45A1.7 1.7 0 0 0 12.39 18a1.7 1.7 0 0 0-1.88.34l-.06.06-1.41-1.41.06-.06A1.7 1.7 0 0 0 9.45 15a1.7 1.7 0 0 0-1.55-1.03H7v-2h.45A1.7 1.7 0 0 0 9 10.94a1.7 1.7 0 0 0-.34-1.88L8.6 9l1.41-1.41.06.06A1.7 1.7 0 0 0 11.55 8 1.7 1.7 0 0 0 12.58 6.45V6h2v.45A1.7 1.7 0 0 0 15.61 8a1.7 1.7 0 0 0 1.88-.34l.06-.06L19 9l-.06.06A1.7 1.7 0 0 0 18.6 10.94 1.7 1.7 0 0 0 20.15 12H20v2h-.45A1.7 1.7 0 0 0 19.4 15z"/></svg></span><span class="nav-label">الهوية<span class="nav-en">Branding</span></span></button>
       <button class="tab-btn" onclick="adminTab('vio-lib')" id="tabbtn-vio-lib" data-label="المخالفات"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 3 3.5 19h17z"/><path d="M12 9v4M12 16h.01"/></svg></span><span class="nav-label">المخالفات<span class="nav-en">Violations</span></span></button>
+      <button class="tab-btn" onclick="adminTab('onsite')" id="tabbtn-onsite" data-label="التدريبات الميدانية"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1.5 2.5 3 6 3s6-1.5 6-3v-5"/></svg></span><span class="nav-label">التدريبات الميدانية<span class="nav-en">On-site Training</span></span></button>
       <button class="tab-btn" onclick="adminTab('admins')" id="tabbtn-admins" data-label="الأدمن"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 5 3 8 7 10 4-2 7-5 7-10V6z"/><path d="M9 12h6M12 9v6"/></svg></span><span class="nav-label">الأدمن<span class="nav-en">Admins</span></span></button>
       <button class="tab-btn" onclick="adminTab('activity')" id="tabbtn-activity" data-label="نشاط الإدارة"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h17"/><path d="m7 15 4-4 3 2 5-6"/></svg></span><span class="nav-label">نشاط الإدارة<span class="nav-en">Activity</span></span></button>
       <button class="tab-btn" onclick="openAdminPreview()" id="tabbtn-preview" data-label="معاينة الموظف"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z"/><circle cx="12" cy="12" r="2.5"/></svg></span><span class="nav-label">معاينة الموظف<span class="nav-en">Worker Preview</span></span></button>
@@ -654,8 +667,52 @@ body{background:linear-gradient(180deg,#f4f7f9 0%,#eef3f6 100%);font-family:'Cai
       </div>
     </div>
 
-    <!-- ===== إدارة الأدمن ===== -->
-    <div class="admin-tab" id="tab-admins">
+    <!-- ===== التدريبات الميدانية ===== -->
+    <div class="admin-tab" id="tab-onsite">
+      <div id="onsite-list-view">
+        <div class="card" style="padding:16px;margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
+            <div class="section-title">🎓 جلسات التدريب الميداني</div>
+            <button class="btn-primary btn-sm" onclick="openNewOnsiteSessionForm()">+ جلسة جديدة</button>
+          </div>
+          <div id="onsite-sessions-list" style="display:flex;flex-direction:column;gap:8px;margin-top:10px;"></div>
+        </div>
+      </div>
+
+      <div id="onsite-form-view" class="hidden">
+        <div class="card" style="padding:16px;margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <div class="section-title">➕ جلسة تدريب ميداني جديدة</div>
+            <button class="btn-secondary btn-sm" onclick="closeOnsiteSessionForm()">→ رجوع للقايمة</button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div style="grid-column:1/-1;">
+              <label class="field-label">عنوان/موضوع التدريب</label>
+              <input id="os-title" type="text" class="input-field" placeholder="مثال: أهمية نظافة السكن والغرفة" oninput="searchOnsiteSameTitle()"/>
+              <div id="os-same-title-results" style="margin-top:6px;"></div>
+            </div>
+            <div><label class="field-label">تاريخ التدريب</label><input id="os-date" type="date" class="input-field"/></div>
+            <div><label class="field-label">مدة التدريب (دقيقة)</label><input id="os-duration" type="number" class="input-field" value="30"/></div>
+            <div><label class="field-label">الغرض من التدريب</label><input id="os-purpose" type="text" class="input-field" placeholder="مثال: أهمية نظافة السكن والغرفة وتأثيرها على بيئة المصنع"/></div>
+            <div><label class="field-label">جهة التدريب</label><input id="os-provider" type="text" class="input-field" placeholder="مثال: محمود حجازي"/></div>
+            <div style="grid-column:1/-1;"><label class="field-label">القسم/المصنع</label><select id="os-section" class="input-field"></select></div>
+          </div>
+
+          <div class="divider"></div>
+          <div style="font-weight:700;font-size:13px;margin-bottom:8px;">👥 إضافة موظفين للجلسة</div>
+          <div style="display:flex;gap:8px;margin-bottom:10px;">
+            <input id="os-worker-search" type="text" class="input-field" placeholder="دوّر برقم الهوية أو الاسم..." oninput="searchOnsiteWorkers()"/>
+          </div>
+          <div id="os-worker-search-results" style="margin-bottom:12px;"></div>
+          <div id="os-participants-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+
+          <div style="margin-top:16px;"><button class="btn-primary" style="padding:11px 24px;font-size:13px;" onclick="saveOnsiteSession()">💾 حفظ الجلسة</button></div>
+          <div id="os-save-msg" style="font-size:12px;margin-top:8px;"></div>
+        </div>
+      </div>
+
+      <div id="onsite-detail-view" class="hidden"></div>
+    </div>
       <div class="card" style="padding:16px;margin-bottom:14px;">
         <div class="section-title" style="margin-bottom:12px;">🔑 كلمة السر الموحّدة الافتراضية</div>
         <p class="muted" style="font-size:12px;margin-bottom:10px;">تُستخدم لأي موظف لسه معملش تغيير لكلمة سره بنفسه. تقدر تغيّرها في أي وقت.</p>
@@ -1817,7 +1874,7 @@ function renderWorkerStaticLabels(){
 }
 
 /* ---------- تنقّل الأيقونات الأربعة في صفحة الموظف ---------- */
-const WORKER_SECTIONS = ['videos','cards','quizzes','violations'];
+const WORKER_SECTIONS = ['videos','cards','quizzes','violations','onsite'];
 let workerActiveSection = 'videos';
 function toggleWorkerSection(name){
   workerActiveSection = name;
